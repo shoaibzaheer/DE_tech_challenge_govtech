@@ -39,7 +39,6 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
  */
 object PipelineMain {
   def main(args: Array[String]): Unit = {
-
     // Initialize SparkSession
     val spark = getSparkSession()
     val namedArgs = getNamedArgs(args)
@@ -60,6 +59,14 @@ object PipelineMain {
     val unSuccesfulDF = getUnsuccessfulApplicants(cleanedDF, successfulDF)
 //    Membership ID Creation:
     val membershipIdDF = createMembershipIds(successfulDF).drop("hashed_birthday", "truncated_hash")
+
+// Write Successful Applicants output file
+    membershipIdDF.repartition(1).write.mode(SaveMode.Overwrite)
+      .option("header", "true").csv(s"$successfulOutputPath/$batchDay/$batchHour")
+
+    // Write Unsuccessful Applicants output file
+    unSuccesfulDF.repartition(1).write.mode(SaveMode.Overwrite)
+      .option("header", "true").csv(s"$unSuccessfulOutputPath/$batchDay/$batchHour")
 
 
   }
